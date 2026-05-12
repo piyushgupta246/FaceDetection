@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Project Portfolio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .project-toolbar { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin: 12px 0; }
+        .project-stats { display: grid; grid-template-columns: repeat(3, minmax(110px, 1fr)); gap: 8px; margin: 10px 0 14px; }
+        .stat-chip { border: 1px solid #334155; border-radius: 10px; padding: 8px; background: rgba(2, 6, 23, 0.45); }
+        .stat-chip p { margin: 0; font-size: .78rem; color: var(--muted); }
+        .stat-chip strong { font-size: 1rem; }
+        .project-meta { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+        .project-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .project-actions { display: flex; gap: 6px; align-items: center; }
+        .status-pill { font-size: .72rem; padding: 3px 8px; border-radius: 999px; border: 1px solid #475569; }
+        .status-completed { background: rgba(34, 197, 94, 0.16); border-color: rgba(34, 197, 94, 0.5); color: #bbf7d0; }
+        .status-progress { background: rgba(234, 179, 8, 0.16); border-color: rgba(234, 179, 8, 0.5); color: #fde68a; }
+        .project-modal.hidden { display: none; }
+        .project-modal { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.78); display: grid; place-items: center; z-index: 9999; padding: 16px; }
+        .project-modal .modal-card { width: min(92vw, 620px); background: rgba(17, 24, 39, 0.98); border: 1px solid #334155; border-radius: 14px; padding: 16px; }
+        .project-modal .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .project-modal .full { grid-column: 1 / -1; }
+        .project-modal textarea, .project-modal select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #374151; background: #0b1220; color: var(--text); }
+        .project-modal .modal-actions { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
+    </style>
+</head>
+<body class="dashboard-page">
+<main class="dashboard-shell">
+    <div class="dashboard-layout">
+        <div class="sidebar-stack">
+            <header class="dashboard-header">
+                <div>
+                    <p class="brand">FaceAuth System</p>
+                    <h1>Project Portfolio</h1>
+                    <p class="subtext">Left profile panel + right projects section.</p>
+                </div>
+                <div class="header-actions">
+                    <span class="profile-badge">👤 {{ user }}</span>
+                    <span class="security-badge">✅ Security Verified</span>
+                    <button id="theme-toggle" class="btn btn-secondary" type="button">🌙 Dark</button>
+                    <a href="{{ url_for('dashboard') }}"><button class="btn btn-secondary" type="button">Dashboard</button></a>
+                    <a href="{{ url_for('logout') }}"><button class="btn btn-secondary" type="button">Logout</button></a>
+                </div>
+            </header>
+
+            <article class="dash-card profile-card profile-card-compact">
+                <div class="profile-head compact-head">
+                    <div id="avatar" class="avatar">U</div>
+                    <div class="compact-profile-text">
+                        <h3>👤 {{ profile.name }}</h3>
+                        <p class="muted">{{ profile.email }}</p>
+                    </div>
+                </div>
+                <div class="compact-meta-row">
+                    <span class="chip">📍 {{ profile.location }}</span>
+                    <span class="chip">🎯 {{ profile.career_goal }}</span>
+                </div>
+            </article>
+        </div>
+
+        <section class="dashboard-grid vertical-stack">
+            <article class="dash-card">
+                <h3>🚀 Projects Only</h3>
+                <p class="muted">Advanced project profile with stats, links, highlights, and better editing.</p>
+
+                <div class="project-stats">
+                    <div class="stat-chip">
+                        <p>Total Projects</p>
+                        <strong>{{ project_stats.total }}</strong>
+                    </div>
+                    <div class="stat-chip">
+                        <p>Completed</p>
+                        <strong>{{ project_stats.completed }}</strong>
+                    </div>
+                    <div class="stat-chip">
+                        <p>In Progress</p>
+                        <strong>{{ project_stats.in_progress }}</strong>
+                    </div>
+                </div>
+
+                <div class="project-toolbar">
+                    <input id="project-search" type="text" placeholder="Search by title, stack, role...">
+                    <button id="add-project-btn" class="btn btn-small" type="button">+ Add Project</button>
+                </div>
+
+                <ul id="project-list" class="timeline record-list">
+                    {% for project in projects %}
+                    <li class="record-item">
+                        <div class="record-head">
+                            <p class="timeline-title project-title">{{ project.title }}</p>
+                            <div class="project-actions">
+                                <span class="record-tag">🗂 Project</span>
+                                <span class="status-pill {% if project.status == 'Completed' %}status-completed{% else %}status-progress{% endif %} project-status">{{ project.status }}</span>
+                                <button
+                                    class="btn btn-secondary btn-small edit-project-btn"
+                                    type="button"
+                                    data-title="{{ project.title }}"
+                                    data-stack="{{ project.stack }}"
+                                    data-description="{{ project.description }}"
+                                    data-status="{{ project.status }}"
+                                    data-year="{{ project.year }}"
+                                    data-role="{{ project.role }}"
+                                    data-github="{{ project.github }}"
+                                    data-demo="{{ project.demo }}"
+                                    data-highlights="{{ project.highlights | join(', ') }}"
+                                >Edit</button>
+                                <button class="btn btn-secondary btn-small delete-project-btn" type="button">Delete</button>
+                            </div>
+                        </div>
+                        <p class="project-stack"><strong>Tech Stack:</strong> {{ project.stack }}</p>
+                        <p class="muted project-description">{{ project.description }}</p>
+                        <div class="project-meta">
+                            <span class="chip project-role">👨‍💻 {{ project.role }}</span>
+                            <span class="chip project-year">📅 {{ project.year }}</span>
+                        </div>
+                        <div class="chips project-highlights">
+                            {% for item in project.highlights %}
+                            <span class="chip">{{ item }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="project-links">
+                            <a class="inline-link project-github" href="{{ project.github }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+                            <a class="inline-link project-demo" href="{{ project.demo }}" target="_blank" rel="noopener noreferrer">Live Demo</a>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+        </section>
+    </div>
+</main>
+
+<div id="project-modal" class="project-modal hidden">
+    <div class="modal-card">
+        <h3 id="modal-title">Edit Project</h3>
+        <form id="project-form">
+            <div class="modal-grid">
+                <input id="f-title" class="full" type="text" placeholder="Project title" required>
+                <input id="f-stack" class="full" type="text" placeholder="Tech stack" required>
+                <textarea id="f-description" class="full" rows="3" placeholder="Project description" required></textarea>
+                <input id="f-role" type="text" placeholder="Your role" required>
+                <input id="f-year" type="text" placeholder="Year" required>
+                <select id="f-status" required>
+                    <option value="Completed">Completed</option>
+                    <option value="In Progress">In Progress</option>
+                </select>
+                <input id="f-highlights" class="full" type="text" placeholder="Highlights (comma separated)" required>
+                <input id="f-github" type="url" placeholder="GitHub URL (optional)">
+                <input id="f-demo" type="url" placeholder="Live Demo URL (optional)">
+            </div>
+            <div class="modal-actions">
+                <button id="cancel-modal" class="btn btn-secondary" type="button">Cancel</button>
+                <button class="btn" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const avatar = document.getElementById('avatar');
+    if (avatar) {
+        const userEmail = "{{ user }}";
+        const initial = (userEmail && userEmail[0]) ? userEmail[0].toUpperCase() : 'U';
+        avatar.textContent = initial;
+    }
+
+    const themeToggle = document.getElementById('theme-toggle');
+    const root = document.body;
+
+    function setTheme(mode) {
+        if (mode === 'light') {
+            root.classList.add('light-theme');
+            if (themeToggle) themeToggle.textContent = '☀️ Light';
+        } else {
+            root.classList.remove('light-theme');
+            if (themeToggle) themeToggle.textContent = '🌙 Dark';
+        }
+        localStorage.setItem('dashboard-theme', mode);
+    }
+
+    const savedTheme = localStorage.getItem('dashboard-theme') || 'dark';
+    setTheme(savedTheme);
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const next = root.classList.contains('light-theme') ? 'dark' : 'light';
+            setTheme(next);
+        });
+    }
+
+    const projectList = document.getElementById('project-list');
+    const searchInput = document.getElementById('project-search');
+    const addBtn = document.getElementById('add-project-btn');
+    const modal = document.getElementById('project-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const form = document.getElementById('project-form');
+    const cancelModal = document.getElementById('cancel-modal');
+
+    const fields = {
+        title: document.getElementById('f-title'),
+        stack: document.getElementById('f-stack'),
+        description: document.getElementById('f-description'),
+        role: document.getElementById('f-role'),
+        year: document.getElementById('f-year'),
+        status: document.getElementById('f-status'),
+        highlights: document.getElementById('f-highlights'),
+        github: document.getElementById('f-github'),
+        demo: document.getElementById('f-demo'),
+    };
+
+    let activeEditButton = null;
+
+    function openModal(mode, btn = null) {
+        activeEditButton = btn;
+        modalTitle.textContent = mode === 'add' ? 'Add Project' : 'Edit Project';
+
+        const data = btn ? btn.dataset : {};
+        fields.title.value = data.title || '';
+        fields.stack.value = data.stack || '';
+        fields.description.value = data.description || '';
+        fields.role.value = data.role || '';
+        fields.year.value = data.year || '';
+        fields.status.value = data.status || 'Completed';
+        fields.highlights.value = data.highlights || '';
+        fields.github.value = data.github === '#' ? '' : (data.github || '');
+        fields.demo.value = data.demo === '#' ? '' : (data.demo || '');
+
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        activeEditButton = null;
+        form.reset();
+    }
+
+    function getHighlights(value) {
+        return (value || '').split(',').map(item => item.trim()).filter(Boolean);
+    }
+
+    function makeProjectCard(data) {
+        const li = document.createElement('li');
+        li.className = 'record-item';
+        const statusClass = data.status === 'Completed' ? 'status-completed' : 'status-progress';
+        const highlightsHtml = getHighlights(data.highlights).map(item => `<span class="chip">${item}</span>`).join('');
+        li.innerHTML = `
+            <div class="record-head">
+                <p class="timeline-title project-title">${data.title}</p>
+                <div class="project-actions">
+                    <span class="record-tag">🗂 Project</span>
+                    <span class="status-pill ${statusClass} project-status">${data.status}</span>
+                    <button class="btn btn-secondary btn-small edit-project-btn" type="button"
+                        data-title="${data.title}" data-stack="${data.stack}" data-description="${data.description}"
+                        data-status="${data.status}" data-year="${data.year}" data-role="${data.role}"
+                        data-github="${data.github || '#'}" data-demo="${data.demo || '#'}" data-highlights="${data.highlights}">Edit</button>
+                    <button class="btn btn-secondary btn-small delete-project-btn" type="button">Delete</button>
+                </div>
+            </div>
+            <p class="project-stack"><strong>Tech Stack:</strong> ${data.stack}</p>
+            <p class="muted project-description">${data.description}</p>
+            <div class="project-meta">
+                <span class="chip project-role">👨‍💻 ${data.role}</span>
+                <span class="chip project-year">📅 ${data.year}</span>
+            </div>
+            <div class="chips project-highlights">${highlightsHtml}</div>
+            <div class="project-links">
+                <a class="inline-link project-github" href="${data.github || '#'}" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <a class="inline-link project-demo" href="${data.demo || '#'}" target="_blank" rel="noopener noreferrer">Live Demo</a>
+            </div>
+        `;
+        return li;
+    }
+
+    if (addBtn) {
+        addBtn.addEventListener('click', () => openModal('add'));
+    }
+
+    if (cancelModal) {
+        cancelModal.addEventListener('click', closeModal);
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!form.reportValidity()) return;
+
+            const payload = {
+                title: fields.title.value.trim(),
+                stack: fields.stack.value.trim(),
+                description: fields.description.value.trim(),
+                role: fields.role.value.trim(),
+                year: fields.year.value.trim(),
+                status: fields.status.value,
+                highlights: fields.highlights.value.trim(),
+                github: fields.github.value.trim() || '#',
+                demo: fields.demo.value.trim() || '#',
+            };
+
+            if (activeEditButton) {
+                const card = activeEditButton.closest('.record-item');
+                if (!card) return closeModal();
+
+                card.querySelector('.project-title').textContent = payload.title;
+                card.querySelector('.project-stack').innerHTML = `<strong>Tech Stack:</strong> ${payload.stack}`;
+                card.querySelector('.project-description').textContent = payload.description;
+                card.querySelector('.project-role').textContent = `👨‍💻 ${payload.role}`;
+                card.querySelector('.project-year').textContent = `📅 ${payload.year}`;
+
+                const statusEl = card.querySelector('.project-status');
+                statusEl.textContent = payload.status;
+                statusEl.classList.toggle('status-completed', payload.status === 'Completed');
+                statusEl.classList.toggle('status-progress', payload.status !== 'Completed');
+
+                const highlightsEl = card.querySelector('.project-highlights');
+                highlightsEl.innerHTML = getHighlights(payload.highlights).map(item => `<span class="chip">${item}</span>`).join('');
+
+                card.querySelector('.project-github').href = payload.github;
+                card.querySelector('.project-demo').href = payload.demo;
+
+                Object.keys(payload).forEach((key) => {
+                    activeEditButton.dataset[key] = payload[key];
+                });
+            } else if (projectList) {
+                projectList.prepend(makeProjectCard(payload));
+            }
+
+            closeModal();
+        });
+    }
+
+    if (projectList) {
+        projectList.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-project-btn');
+            const deleteBtn = e.target.closest('.delete-project-btn');
+
+            if (editBtn) openModal('edit', editBtn);
+            if (deleteBtn) {
+                const card = deleteBtn.closest('.record-item');
+                if (card && confirm('Delete this project card?')) {
+                    card.remove();
+                }
+            }
+        });
+    }
+
+    if (searchInput && projectList) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.toLowerCase().trim();
+            projectList.querySelectorAll('.record-item').forEach((card) => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = !q || text.includes(q) ? '' : 'none';
+            });
+        });
+    }
+</script>
+</body>
+</html>

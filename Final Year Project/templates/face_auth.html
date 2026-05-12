@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Face Authentication</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<main class="container">
+    <h2 class="card-title">📸 Face Authentication (2FA)</h2>
+    <p class="subtext">Look at your camera and verify your identity.</p>
+
+    <div class="info-panel">
+        <p class="info-title">Authentication checklist</p>
+        <ul class="quick-list">
+            <li>Keep your face centered and clearly visible.</li>
+            <li>Ensure enough lighting on your face.</li>
+            <li>Remove masks/sunglasses for accurate matching.</li>
+        </ul>
+    </div>
+
+    <img class="camera-feed" src="{{ url_for('video_feed') }}" alt="Camera feed">
+
+    <p class="status auth-status-card" id="auth-status">Scanning your face...</p>
+
+    <div class="actions">
+        <a href="/verify_face"><button class="btn" type="button">Verify Face</button></a>
+        <a href="/"><button class="btn btn-secondary" type="button">Back</button></a>
+    </div>
+</main>
+
+<script>
+    const statusEl = document.getElementById('auth-status');
+
+    async function checkAuthStatus() {
+        try {
+            const res = await fetch('/auth-status');
+            const data = await res.json();
+            const meta = data.meta || {};
+            const confidence = typeof meta.confidence === 'number' ? ` (${meta.confidence}% confidence)` : '';
+
+            if (data.status === 'match') {
+                statusEl.textContent = '✅ Face matched. Redirecting to dashboard...';
+                // Go through backend verification route to guarantee session flag is set
+                window.location.href = '/verify_face';
+                return;
+            }
+
+            if (data.status === 'no_face') {
+                statusEl.textContent = '⚠ No face detected. Please align your face inside the frame.';
+            } else if (data.status === 'waiting') {
+                statusEl.textContent = `🔎 Face detected. Trying to match${confidence}...`;
+            } else if (data.status === 'no_match') {
+                statusEl.textContent = `❌ Face not recognized yet${confidence}. Keep looking at the camera.`;
+            } else if (data.status === 'camera_error') {
+                statusEl.textContent = '⚠ Camera access error. Please reconnect camera and retry.';
+            } else {
+                statusEl.textContent = 'Scanning your face...';
+            }
+        } catch (e) {
+            statusEl.textContent = '⚠ Unable to check auth status.';
+        }
+    }
+
+    setInterval(checkAuthStatus, 1200);
+    checkAuthStatus();
+</script>
+
+</body>
+</html>

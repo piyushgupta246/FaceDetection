@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dashboard-page">
+<main class="dashboard-shell">
+    <div class="dashboard-layout">
+    <div class="sidebar-stack">
+        <header class="dashboard-header">
+            <div>
+                <p class="brand">FaceAuth System</p>
+                <h1>Welcome back, {{ user }}</h1>
+                <p class="subtext">Your secure personalized workspace is ready.</p>
+            </div>
+            <div class="header-actions">
+                <span class="profile-badge">👤 {{ user }}</span>
+                <span class="security-badge">✅ Security Verified</span>
+                <a href="{{ url_for('portfolio') }}"><button class="btn btn-secondary" type="button">Projects</button></a>
+                <button id="theme-toggle" class="btn btn-secondary" type="button">🌙 Dark</button>
+                <a href="/logout"><button class="btn btn-secondary" type="button">Logout</button></a>
+            </div>
+        </header>
+
+        <article class="dash-card sidebar-security-card">
+            <h3>🔐 Security & Verification</h3>
+            <p class="alert alert-success">✔ Face Authentication Verified</p>
+            <div class="chips">
+                <span class="chip chip-success">2FA Active</span>
+                <span class="chip chip-success">Session Protected</span>
+                <span class="chip">Risk: Low</span>
+            </div>
+            <p><strong>Last refresh:</strong> <span id="last-refresh">Now</span></p>
+        </article>
+
+        <article class="dash-card sidebar-social-card">
+            <h3>🌐 Connect Me!</h3>
+            <div class="social-links">
+                <a class="social-link linkedin" href="#" target="_blank" rel="noopener noreferrer">
+                    <span class="social-icon">in</span>
+                </a>
+                <a class="social-link instagram" href="#" target="_blank" rel="noopener noreferrer">
+                    <span class="social-icon">ig</span>
+                </a>
+                <a class="social-link facebook" href="#" target="_blank" rel="noopener noreferrer">
+                    <span class="social-icon">f</span>
+                </a>
+            </div>
+        </article>
+    </div>
+
+    <section class="dashboard-grid vertical-stack">
+        <article class="dash-card profile-card profile-card-compact">
+            <div class="profile-head compact-head">
+                <div id="avatar" class="avatar">U</div>
+                <div class="compact-profile-text">
+                    <h3>👤 {{ profile.name }}</h3>
+                    <p class="muted">{{ profile.email }}</p>
+                </div>
+                <button id="toggle-profile-edit" class="btn btn-small compact-edit-btn" type="button">Edit</button>
+            </div>
+            <div class="compact-meta-row">
+                <span class="chip">📍 {{ profile.location }}</span>
+                <span class="chip">🎯 {{ profile.career_goal }}</span>
+            </div>
+            {% if profile_updated %}
+            <p class="alert alert-success">✅ Profile updated successfully.</p>
+            {% endif %}
+
+            <form id="profile-edit-form" class="profile-form hidden" method="POST" action="{{ url_for('profile_update') }}">
+                <label for="name">Full Name</label>
+                <input id="name" name="name" type="text" value="{{ profile.name }}" required>
+
+                <label for="location">Location</label>
+                <input id="location" name="location" type="text" value="{{ profile.location }}">
+
+                <label for="career_goal">Career Goal</label>
+                <input id="career_goal" name="career_goal" type="text" value="{{ profile.career_goal }}">
+
+                <div class="profile-form-actions">
+                    <button class="btn" type="submit">Save Changes</button>
+                    <button id="cancel-profile-edit" class="btn btn-secondary" type="button">Cancel</button>
+                </div>
+            </form>
+        </article>
+
+        <article class="dash-card">
+            <h3>📊 Everyday Activity Logs</h3>
+            <p class="muted">Organized data view with both pie chart and weekly line trend.</p>
+            <div class="chart-grid">
+                <div class="chart-box">
+                    <p class="chart-title">Activity Distribution (Pie)</p>
+                    <div id="activity-pie" class="pie-chart" aria-label="Activity distribution pie chart"></div>
+                    <div id="pie-legend" class="chart-legend"></div>
+                </div>
+                <div class="chart-box">
+                    <p class="chart-title">Weekly Minutes Trend (Line)</p>
+                    <svg id="activity-line" class="line-chart" viewBox="0 0 320 180" aria-label="Weekly activity line chart"></svg>
+                    <div id="line-labels" class="axis-labels"></div>
+                </div>
+            </div>
+        </article>
+
+        <article class="dash-card">
+            <h3>📅 Meeting & Schedule Monitoring</h3>
+            <p class="muted">Track upcoming meetings and monitor completion status of planned tasks.</p>
+            <div class="meeting-grid">
+                <div class="meeting-panel">
+                    <p class="meeting-title">Upcoming Meetings</p>
+                    <ul id="meeting-list" class="meeting-list"></ul>
+                </div>
+                <div class="meeting-panel">
+                    <p class="meeting-title">Schedule Monitoring</p>
+                    <div id="schedule-monitor" class="schedule-monitor"></div>
+                </div>
+            </div>
+        </article>
+
+        <article class="dash-card">
+            <h3>🎓 Education Records</h3>
+            <ul id="education-list" class="timeline record-list">
+                <li class="record-item">
+                    <div class="record-head">
+                        <p class="timeline-title">B.Tech in Computer Science</p>
+                        <span class="record-tag">📁 Record</span>
+                    </div>
+                    <p class="muted">Your University • 2022 - 2026</p>
+                </li>
+                <li class="record-item">
+                    <div class="record-head">
+                        <p class="timeline-title">Higher Secondary (12th)</p>
+                        <span class="record-tag">📁 Record</span>
+                    </div>
+                    <p class="muted">Science Stream • 2020 - 2022</p>
+                </li>
+            </ul>
+            <div class="add-inline">
+                <input id="education-input" type="text" placeholder="Add new education detail">
+                <button class="btn btn-small" type="button" data-target="education">+ Add Education</button>
+            </div>
+        </article>
+
+        <article class="dash-card">
+            <h3>💼 Experience</h3>
+            <ul id="experience-list" class="timeline record-list">
+                <li class="record-item">
+                    <div class="record-head">
+                        <p class="timeline-title">Final Year Project - Face Authenticator</p>
+                        <span class="record-tag">📄 File</span>
+                    </div>
+                    <p class="muted">Flask, OpenCV, Face Recognition</p>
+                </li>
+                <li class="record-item">
+                    <div class="record-head">
+                        <p class="timeline-title">Internship / Training</p>
+                        <span class="record-tag">📄 File</span>
+                    </div>
+                    <p class="muted">Add your organization and role details</p>
+                </li>
+            </ul>
+            <div class="add-inline">
+                <input id="experience-input" type="text" placeholder="Add new experience detail">
+                <button class="btn btn-small" type="button" data-target="experience">+ Add Experience</button>
+            </div>
+        </article>
+
+        <article class="dash-card">
+            <h3>🪪 Verified IDs</h3>
+            <div class="id-grid">
+                <div class="id-item">
+                    <p><strong>Aadhaar / National ID</strong></p>
+                    <span class="chip chip-success">Verified</span>
+                </div>
+                <div class="id-item">
+                    <p><strong>Student ID</strong></p>
+                    <span class="chip chip-success">Verified</span>
+                </div>
+                <div class="id-item">
+                    <p><strong>Email Address</strong></p>
+                    <span class="chip chip-success">Verified</span>
+                </div>
+                <div class="id-item">
+                    <p><strong>Phone Number</strong></p>
+                    <span class="chip">Pending</span>
+                </div>
+            </div>
+        </article>
+
+        <article class="dash-card">
+            <h3>🧠 Skills</h3>
+            <div id="skills-list" class="chips">
+                <span class="chip">Python</span>
+                <span class="chip">Flask</span>
+                <span class="chip">OpenCV</span>
+                <span class="chip">Face Recognition</span>
+                <span class="chip">SQLite</span>
+                <span class="chip">HTML/CSS</span>
+            </div>
+            <div class="add-inline">
+                <input id="skills-input" type="text" placeholder="Add new skill">
+                <button class="btn btn-small" type="button" data-target="skills">+ Add Skill</button>
+            </div>
+        </article>
+
+
+    </section>
+    </div>
+</main>
+
+<div id="chart-tooltip" class="chart-tooltip hidden" role="status" aria-live="polite"></div>
+
+<script>
+    const refreshEl = document.getElementById('last-refresh');
+    if (refreshEl) {
+        const now = new Date();
+        refreshEl.textContent = now.toLocaleString();
+    }
+
+    const avatar = document.getElementById('avatar');
+    if (avatar) {
+        const userEmail = "{{ user }}";
+        const initial = (userEmail && userEmail[0]) ? userEmail[0].toUpperCase() : 'U';
+        avatar.textContent = initial;
+    }
+
+    const themeToggle = document.getElementById('theme-toggle');
+    const root = document.body;
+
+    function setTheme(mode) {
+        if (mode === 'light') {
+            root.classList.add('light-theme');
+            if (themeToggle) themeToggle.textContent = '☀️ Light';
+        } else {
+            root.classList.remove('light-theme');
+            if (themeToggle) themeToggle.textContent = '🌙 Dark';
+        }
+        localStorage.setItem('dashboard-theme', mode);
+    }
+
+    const savedTheme = localStorage.getItem('dashboard-theme') || 'dark';
+    setTheme(savedTheme);
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const next = root.classList.contains('light-theme') ? 'dark' : 'light';
+            setTheme(next);
+        });
+    }
+
+    const editBtn = document.getElementById('toggle-profile-edit');
+    const cancelBtn = document.getElementById('cancel-profile-edit');
+    const editForm = document.getElementById('profile-edit-form');
+
+    if (editBtn && editForm) {
+        editBtn.addEventListener('click', () => {
+            editForm.classList.remove('hidden');
+            editBtn.classList.add('hidden');
+        });
+    }
+
+    if (cancelBtn && editForm && editBtn) {
+        cancelBtn.addEventListener('click', () => {
+            editForm.classList.add('hidden');
+            editBtn.classList.remove('hidden');
+        });
+    }
+
+    const educationList = document.getElementById('education-list');
+    const experienceList = document.getElementById('experience-list');
+    const skillsList = document.getElementById('skills-list');
+
+    const activityPie = document.getElementById('activity-pie');
+    const pieLegend = document.getElementById('pie-legend');
+    const activityLine = document.getElementById('activity-line');
+    const lineLabels = document.getElementById('line-labels');
+    const chartTooltip = document.getElementById('chart-tooltip');
+    const meetingList = document.getElementById('meeting-list');
+    const scheduleMonitor = document.getElementById('schedule-monitor');
+
+    function showTooltip(text, x, y) {
+        if (!chartTooltip) return;
+        chartTooltip.textContent = text;
+        chartTooltip.style.left = `${x + 12}px`;
+        chartTooltip.style.top = `${y - 10}px`;
+        chartTooltip.classList.remove('hidden');
+    }
+
+    function hideTooltip() {
+        if (!chartTooltip) return;
+        chartTooltip.classList.add('hidden');
+    }
+
+    const activitySplit = [
+        { label: 'Login', value: 28, color: '#22d3ee' },
+        { label: 'Profile', value: 18, color: '#38bdf8' },
+        { label: 'Security', value: 22, color: '#22c55e' },
+        { label: 'Records', value: 20, color: '#a78bfa' },
+        { label: 'Projects', value: 12, color: '#f59e0b' }
+    ];
+
+    const weeklyLogs = [
+        { day: 'Mon', minutes: 35 },
+        { day: 'Tue', minutes: 52 },
+        { day: 'Wed', minutes: 48 },
+        { day: 'Thu', minutes: 66 },
+        { day: 'Fri', minutes: 58 },
+        { day: 'Sat', minutes: 41 },
+        { day: 'Sun', minutes: 29 }
+    ];
+
+    const meetings = [
+        { title: 'Project Guide Sync', time: 'Mon • 10:30 AM', mode: 'Online', status: 'Confirmed' },
+        { title: 'Team Sprint Planning', time: 'Wed • 02:00 PM', mode: 'Lab 3', status: 'Scheduled' },
+        { title: 'Demo Preparation Review', time: 'Fri • 11:15 AM', mode: 'Online', status: 'Pending' }
+    ];
+
+    const scheduleItems = [
+        { task: 'Dataset Cleanup', progress: 82 },
+        { task: 'Model Accuracy Testing', progress: 64 },
+        { task: 'Dashboard UI Polishing', progress: 91 },
+        { task: 'Final Report Draft', progress: 56 }
+    ];
+
+    if (activityPie && pieLegend && activitySplit.length) {
+        const total = activitySplit.reduce((sum, item) => sum + item.value, 0) || 1;
+        let running = 0;
+        const angleMap = [];
+        const stops = activitySplit.map((item) => {
+            const start = (running / total) * 100;
+            const startDeg = (running / total) * 360;
+            running += item.value;
+            const end = (running / total) * 100;
+            const endDeg = (running / total) * 360;
+            angleMap.push({ startDeg, endDeg, item });
+            return `${item.color} ${start.toFixed(2)}% ${end.toFixed(2)}%`;
+        });
+        activityPie.style.background = `conic-gradient(${stops.join(',')})`;
+
+        activityPie.addEventListener('mousemove', (e) => {
+            const rect = activityPie.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = e.clientX - cx;
+            const dy = e.clientY - cy;
+            const distance = Math.hypot(dx, dy);
+
+            if (distance > rect.width / 2) {
+                hideTooltip();
+                return;
+            }
+
+            let deg = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
+            if (deg < 0) deg += 360;
+
+            const active = angleMap.find((slice) => deg >= slice.startDeg && deg <= slice.endDeg);
+            if (!active) return;
+
+            const pct = Math.round((active.item.value / total) * 100);
+            showTooltip(`${active.item.label}: ${pct}%`, e.clientX, e.clientY);
+        });
+
+        activityPie.addEventListener('mouseleave', hideTooltip);
+
+        activitySplit.forEach((item) => {
+            const row = document.createElement('div');
+            row.className = 'legend-item';
+            const pct = Math.round((item.value / total) * 100);
+            row.innerHTML = `<span class="legend-dot" style="background:${item.color}"></span><span>${item.label}</span><strong>${pct}%</strong>`;
+            row.addEventListener('mouseenter', (e) => showTooltip(`${item.label}: ${pct}%`, e.clientX, e.clientY));
+            row.addEventListener('mousemove', (e) => showTooltip(`${item.label}: ${pct}%`, e.clientX, e.clientY));
+            row.addEventListener('mouseleave', hideTooltip);
+            pieLegend.appendChild(row);
+        });
+    }
+
+    if (activityLine && lineLabels && weeklyLogs.length) {
+        const width = 320;
+        const height = 180;
+        const padX = 22;
+        const padY = 20;
+        const maxValue = Math.max(...weeklyLogs.map((item) => item.minutes), 1);
+
+        const points = weeklyLogs.map((item, index) => {
+            const x = padX + (index * (width - padX * 2)) / (weeklyLogs.length - 1 || 1);
+            const y = height - padY - (item.minutes / maxValue) * (height - padY * 2);
+            return { x, y, item };
+        });
+
+        const polyPoints = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+        activityLine.innerHTML = `
+            <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" class="axis-line"></line>
+            <polyline points="${polyPoints}" class="trend-line"></polyline>
+            ${points
+                .map(
+                    (p) => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" class="trend-dot"><title>${p.item.day}: ${p.item.minutes} min</title></circle>`
+                )
+                .join('')}
+        `;
+
+        weeklyLogs.forEach((item) => {
+            const label = document.createElement('span');
+            label.className = 'axis-day';
+            label.textContent = item.day;
+            lineLabels.appendChild(label);
+        });
+
+        activityLine.querySelectorAll('.trend-dot').forEach((dot, i) => {
+            const point = weeklyLogs[i];
+            if (!point) return;
+            dot.addEventListener('mouseenter', (e) => showTooltip(`${point.day}: ${point.minutes} minutes`, e.clientX, e.clientY));
+            dot.addEventListener('mousemove', (e) => showTooltip(`${point.day}: ${point.minutes} minutes`, e.clientX, e.clientY));
+            dot.addEventListener('mouseleave', hideTooltip);
+        });
+    }
+
+    if (meetingList && meetings.length) {
+        meetings.forEach((meeting) => {
+            const li = document.createElement('li');
+            li.className = 'meeting-item';
+            li.innerHTML = `
+                <p class="meeting-name">${meeting.title}</p>
+                <p class="meeting-meta">${meeting.time} • ${meeting.mode}</p>
+                <span class="meeting-status">${meeting.status}</span>
+            `;
+            meetingList.appendChild(li);
+        });
+    }
+
+    if (scheduleMonitor && scheduleItems.length) {
+        scheduleItems.forEach((entry) => {
+            const row = document.createElement('div');
+            row.className = 'schedule-row';
+            row.innerHTML = `
+                <div class="schedule-head">
+                    <span>${entry.task}</span>
+                    <strong>${entry.progress}%</strong>
+                </div>
+                <div class="schedule-track">
+                    <span class="schedule-fill" style="width:${entry.progress}%"></span>
+                </div>
+            `;
+            scheduleMonitor.appendChild(row);
+        });
+    }
+
+    document.querySelectorAll('button[data-target]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-target');
+
+            if (target === 'education') {
+                const input = document.getElementById('education-input');
+                const value = (input?.value || '').trim();
+                if (!value || !educationList) return;
+                const li = document.createElement('li');
+                li.className = 'record-item';
+                li.innerHTML = `<div class="record-head"><p class="timeline-title">${value}</p><span class="record-tag">📁 Record</span></div><p class="muted">Custom record</p>`;
+                educationList.appendChild(li);
+                input.value = '';
+            }
+
+            if (target === 'experience') {
+                const input = document.getElementById('experience-input');
+                const value = (input?.value || '').trim();
+                if (!value || !experienceList) return;
+                const li = document.createElement('li');
+                li.className = 'record-item';
+                li.innerHTML = `<div class="record-head"><p class="timeline-title">${value}</p><span class="record-tag">📄 File</span></div><p class="muted">Custom record</p>`;
+                experienceList.appendChild(li);
+                input.value = '';
+            }
+
+            if (target === 'skills') {
+                const input = document.getElementById('skills-input');
+                const value = (input?.value || '').trim();
+                if (!value || !skillsList) return;
+                const chip = document.createElement('span');
+                chip.className = 'chip';
+                chip.textContent = value;
+                skillsList.appendChild(chip);
+                input.value = '';
+            }
+        });
+    });
+</script>
+</body>
+</html>

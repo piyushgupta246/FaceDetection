@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<main class="container">
+    <h2 class="card-title">🔐 Email Login</h2>
+    <p class="subtext">Enter your account credentials to continue.</p>
+
+    <form action="/login" method="post">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button class="btn" type="submit">Login</button>
+    </form>
+
+    <div class="info-panel">
+        <p class="info-title">Why this login is secure</p>
+        <div class="chips compact-chips">
+            <span class="chip">🔒 Encrypted Password</span>
+            <span class="chip">📸 Face 2FA Required</span>
+            <span class="chip">🛡 Session Protected</span>
+        </div>
+    </div>
+
+    <p class="status">New user? <a class="inline-link" href="/register">Register and train face model</a></p>
+</main>
+
+</body>
+</html>

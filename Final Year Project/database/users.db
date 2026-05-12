@@ -1,0 +1,21 @@
+import sqlite3
+import os
+
+# create folder if not exists
+os.makedirs("database", exist_ok=True)
+
+conn = sqlite3.connect("database/users.db")
+cur = conn.cursor()
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE,
+    password TEXT
+)
+""")
+
+conn.commit()
+conn.close()
+
+print("✅ Empty database created (no users)")

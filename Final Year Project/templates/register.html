@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<main class="container">
+    <h2 class="card-title">🆕 Register New User</h2>
+    <p class="subtext">Create account, capture face dataset, and train authenticator model.</p>
+
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% endif %}
+
+    {% if message %}
+        <p class="alert alert-success">{{ message }}</p>
+    {% endif %}
+
+    <form action="/register" method="post">
+        <input type="text" name="name" placeholder="Full Name" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button class="btn" type="submit">Register & Train Face Model</button>
+    </form>
+
+    <p class="status">Already registered? <a class="inline-link" href="/">Go to login</a></p>
+</main>
+
+</body>
+</html>
